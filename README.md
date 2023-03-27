@@ -1,5 +1,21 @@
 
+# Assumption
 
+## Data Input and Output
+
+    * Input
+    clinic name, state name(some) or state code(restrict), availability.
+
+    * Output 
+    Display the results from searching on the console.
+
+## Processing
+
+    * result from searching must be satisfied as follows.
+    1. search by clinic name
+    2. search by state name of state code, 
+       if state only has a code, it can be searched by state name.
+    3. search by availability time.
 # Test
 
     Test suite for search engine.
