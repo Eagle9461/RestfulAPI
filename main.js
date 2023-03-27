@@ -27,14 +27,16 @@ const searchClinics = async (clinicName, state, availability, url) => {
     const isCriteria = (clinic) => {
 
         // convert stateCode to stateName
-        clinic.stateName = ( clinic.stateName == undefined ) ? State.getStateByCodeAndCountry(clinic.stateCode, 'US').name : clinic.stateName;
+        let stateName = ( clinic.stateName == undefined ) ? 
+            State.getStateByCodeAndCountry(clinic.stateCode, 'US').name : clinic.stateName;
 
         //convert stateName to stateCode
-        clinic.stateCode = ( clinic.stateCode == undefined ) ? stateNameToCode(clinic.stateName) : clinic.stateCode;
+        let stateCode = ( clinic.stateCode == undefined ) ? 
+            stateNameToCode(clinic.stateName) : clinic.stateCode;
 
         return (
             ( isContained(clinic.clinicName, clinicName) || isContained(clinic.name, clinicName) ) &&
-            ( clinic.stateCode == state || isContained(clinic.stateName, state) ) &&
+            ( stateCode == state || isContained(stateName, state) ) &&
             (
                 ( clinic.availability != undefined ) ?
                 (
@@ -76,10 +78,7 @@ const generalSearch = (content) => {
     )
 }
 
-// Test
+// Start
 
-//generalSearch({name:'', state:'', availability:{from:'', to:''}});
+generalSearch({name:'German Pets', state:'KS', availability:{from:'08:00', to:''}});
 
-generalSearch({name:'German Pets', state:'KS', availability:{from:'', to:''}});
-
-//generalSearch({name:'Mount', state:'TX', availability:{from:'', to:''}});
