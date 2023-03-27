@@ -1,34 +1,85 @@
 import axios from "axios";
 import { State }  from 'country-state-city';
+import { stateNameToCode } from './stateNameToCode.js';
 
-const fetchData = async () => {
-	const dental_response = await axios.get('https://storage.googleapis.com/scratchpay-code-challenge/dental-clinics.json');
-    const vet_response = await axios.get('https://storage.googleapis.com/scratchpay-code-challenge/vet-clinics.json');
+// fetch data about clinics
 
-    return dental_response.data.concat(vet_response.data);
+const fetchData = async (url) => {
+    const response = await axios.get(url);
+    return response.data;
 };
 
-const searchClinics = async (clinicName, state, availability) => {
+// check whether text contain a term
 
-    let currentState = State.getStateByCodeAndCountry(state, 'US');
+const isContained = (text, term) => {
+    if( text == undefined ) 
+        return false;
+    
+    return text.search(term) > -1;
+}
+
+// get searching result from list of clinics
+
+const searchClinics = async (clinicName, state, availability, url) => {
+
+    // check whether a clinic is criteria
 
     const isCriteria = (clinic) => {
-        let stateName = ( clinic.stateName == undefined ) ? clinic.stateCode : clinic.stateName;
+
+        // convert stateCode to stateName
+        clinic.stateName = ( clinic.stateName == undefined ) ? State.getStateByCodeAndCountry(clinic.stateCode, 'US').name : clinic.stateName;
+
+        //convert stateName to stateCode
+        clinic.stateCode = ( clinic.stateCode == undefined ) ? stateNameToCode(clinic.stateName) : clinic.stateCode;
 
         return (
-            ( clinicName == "" || ( clinic.clinicName == clinicName || clinic.name == clinicName ) ) &&
-            ( stateName == currentState.isoCode || stateName == currentState.name ) &&
+            ( isContained(clinic.clinicName, clinicName) || isContained(clinic.name, clinicName) ) &&
+            ( clinic.stateCode == state || isContained(clinic.stateName, state) ) &&
             (
-                (availability.from == "" || clinic.from == availability.from) && 
-                (availability.to == "" || clinic.to == availability.to)
+                ( clinic.availability != undefined ) ?
+                (
+                    (availability.from == "" || clinic.availability.from == availability.from) && 
+                    (availability.to == "" || clinic.availability.to == availability.to)
+                ) :
+                (
+                    (availability.from == "" || clinic.opening.from == availability.from) && 
+                    (availability.to == "" || clinic.opening.to == availability.to)
+                )
             )
         );
-    }
+    } 
 
-    const data = await fetchData();
+    const data = await fetchData(url);
     return data.filter(isCriteria);
 }
 
-searchClinics('', 'CA', { from : "", to : "" }).then(data => {
-    console.log(data);
-})
+// display the results.
+
+const display = (datas) => {
+    datas.forEach ( data => console.log(data) );
+}
+
+// As main function, search for all urls.
+
+const generalSearch = (content) => {
+    const dataUrls = [];
+    
+    dataUrls.push('https://storage.googleapis.com/scratchpay-code-challenge/dental-clinics.json');
+    dataUrls.push('https://storage.googleapis.com/scratchpay-code-challenge/vet-clinics.json');
+    
+    dataUrls.forEach( url => {
+            searchClinics(content.name, content.state, content.availability, url)
+                .then(data => {
+                    display(data);
+                })
+        }
+    )
+}
+
+// Test
+
+//generalSearch({name:'', state:'', availability:{from:'', to:''}});
+
+generalSearch({name:'German Pets', state:'KS', availability:{from:'', to:''}});
+
+//generalSearch({name:'Mount', state:'TX', availability:{from:'', to:''}});
